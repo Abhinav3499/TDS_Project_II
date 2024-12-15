@@ -8,6 +8,7 @@
 #     "seaborn",
 #     "scikit-learn",
 #     "missingno",
+#     "numpy",
 # ]
 # ///
 
@@ -21,6 +22,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from scipy import stats
 import missingno as msno
 import numpy as np
 import time
@@ -125,7 +127,23 @@ def perform_analysis_and_visualization(df, initial_insight):
         methods.append("Time Series Analysis")
         insights.append(time_series_results)
 
+    # Additional advanced statistical methods
+    if "hypothesis testing" in initial_insight.lower():
+        hypothesis_test_results = apply_hypothesis_testing(df)
+        methods.append("Hypothesis Testing")
+        insights.append(hypothesis_test_results)
+
     return methods, insights
+
+def apply_hypothesis_testing(df):
+    """
+    Apply hypothesis testing (e.g., t-test) and generate a report.
+    """
+    numerical_cols = df.select_dtypes(include="number").columns
+    if len(numerical_cols) >= 2:
+        t_stat, p_value = stats.ttest_ind(df[numerical_cols[0]].dropna(), df[numerical_cols[1]].dropna())
+        return [f"T-test: {numerical_cols[0]} vs {numerical_cols[1]} - p-value: {p_value}"]
+    return []
 
 def apply_time_series_analysis(df):
     """
@@ -150,7 +168,6 @@ def apply_time_series_analysis(df):
         return ["time_series_plot.png"]
     return []
 
-
 def apply_linear_regression(df):
     """
     Apply linear regression and generate relevant plot.
@@ -159,6 +176,9 @@ def apply_linear_regression(df):
     if len(numerical_cols) >= 2:
         sns.regplot(x=numerical_cols[0], y=numerical_cols[1], data=df, scatter_kws={"color": "red"}, line_kws={"color": "blue"})
         plt.title(f"Linear Regression: {numerical_cols[0]} vs {numerical_cols[1]}")
+        plt.xlabel(numerical_cols[0])
+        plt.ylabel(numerical_cols[1])
+        plt.legend(["Regression Line", "Data Points"])
         plt.savefig("regression_plot.png")
         plt.close()
         return ["regression_plot.png"]
@@ -176,6 +196,9 @@ def apply_kmeans_clustering(df):
         df['Cluster'] = kmeans.fit_predict(scaled_data)
         sns.scatterplot(x=df[numerical_cols[0]], y=df[numerical_cols[1]], hue=df['Cluster'], palette="Set1")
         plt.title(f"KMeans Clustering: {numerical_cols[0]} vs {numerical_cols[1]}")
+        plt.xlabel(numerical_cols[0])
+        plt.ylabel(numerical_cols[1])
+        plt.legend(["Cluster 1", "Cluster 2", "Cluster 3"])
         plt.savefig("kmeans_plot.png")
         plt.close()
         return ["kmeans_plot.png"]
@@ -193,6 +216,9 @@ def apply_pca(df):
         df['PCA2'] = pca_result[:, 1]
         sns.scatterplot(x='PCA1', y='PCA2', data=df)
         plt.title("PCA Plot")
+        plt.xlabel("Principal Component 1")
+        plt.ylabel("Principal Component 2")
+        plt.legend(["Data Points"])
         plt.savefig("pca_plot.png")
         plt.close()
         return ["pca_plot.png"]
@@ -269,3 +295,4 @@ if __name__ == "__main__":
 
     # Generate and write the analysis summary to README
     generate_readme(data_summary, methods, insights, initial_insight)
+
